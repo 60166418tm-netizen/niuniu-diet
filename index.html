@@ -691,7 +691,7 @@
         <p id="subGreeting">今天也是认真爱自己的一天</p>
         <div class="tags-row">
           <span class="streak-badge" id="streakBadge">已累计打卡 1 天</span>
-          <span class="cloud-sync-tag offline" id="cloudSyncTag">🧪 测试模式(不上云)</span>
+          <span class="cloud-sync-tag" id="cloudSyncTag">☁️ 已连云端</span>
         </div>
       </div>
     </div>
@@ -989,11 +989,31 @@
         } else {
           const lDay = result[dateKey];
           const cDay = cloud[dateKey];
+          
+          // 如果双方都有，根据每个单项的 updatedAt 时间戳判断谁最新；若无时间戳则根据操作状态
+          function pickLatestMeal(lMeal, cMeal, defaultVal) {
+            if (!lMeal && !cMeal) return defaultVal;
+            if (!lMeal) return cMeal;
+            if (!cMeal) return lMeal;
+            const lTime = lMeal.updatedAt || 0;
+            const cTime = cMeal.updatedAt || 0;
+            if (lTime !== cTime) {
+              return lTime > cTime ? lMeal : cMeal;
+            }
+            // 时间戳一致时，已打卡的优先
+            if (lMeal.done && !cMeal.done) return lMeal;
+            if (cMeal.done && !lMeal.done) return cMeal;
+            return lMeal;
+          }
+
           result[dateKey] = {
-            water: Math.max(lDay.water || 0, cDay.water || 0),
-            lunch: (cDay.lunch && cDay.lunch.done) ? cDay.lunch : (lDay.lunch || { done: false, time: '', text: '', satiety: '刚好' }),
-            dinner: (cDay.dinner && cDay.dinner.done) ? cDay.dinner : (lDay.dinner || { done: false, time: '', text: '', satiety: '刚好' }),
-            fitness: (cDay.fitness && cDay.fitness.done) ? cDay.fitness : (lDay.fitness || { done: false, time: '', text: '', duration: '40' })
+            water: (lDay.waterUpdatedAt && cDay.waterUpdatedAt) 
+              ? (lDay.waterUpdatedAt >= cDay.waterUpdatedAt ? (lDay.water || 0) : (cDay.water || 0))
+              : (lDay.water !== undefined ? lDay.water : (cDay.water || 0)),
+            waterUpdatedAt: Math.max(lDay.waterUpdatedAt || 0, cDay.waterUpdatedAt || 0),
+            lunch: pickLatestMeal(lDay.lunch, cDay.lunch, { done: false, time: '', text: '', satiety: '刚好', updatedAt: 0 }),
+            dinner: pickLatestMeal(lDay.dinner, cDay.dinner, { done: false, time: '', text: '', satiety: '刚好', updatedAt: 0 }),
+            fitness: pickLatestMeal(lDay.fitness, cDay.fitness, { done: false, time: '', text: '', duration: '30~60分钟', updatedAt: 0 })
           };
         }
       }
@@ -1012,9 +1032,10 @@
     function getEmptyDayData() {
       return {
         water: 0,
-        lunch: { done: false, time: '', text: '', satiety: '刚好' },
-        dinner: { done: false, time: '', text: '', satiety: '刚好' },
-        fitness: { done: false, time: '', text: '', duration: '30~60分钟' }
+        waterUpdatedAt: Date.now(),
+        lunch: { done: false, time: '', text: '', satiety: '刚好', updatedAt: Date.now() },
+        dinner: { done: false, time: '', text: '', satiety: '刚好', updatedAt: Date.now() },
+        fitness: { done: false, time: '', text: '', duration: '30~60分钟', updatedAt: Date.now() }
       };
     }
 
@@ -1026,6 +1047,14 @@
       if (dayRecord.dinner && dayRecord.dinner.done) count++;
       if (dayRecord.fitness && dayRecord.fitness.done) count++;
       return count;
+    }
+
+    let cloudSyncDebounceTimer = null;
+    function triggerDebouncedCloudSync() {
+      clearTimeout(cloudSyncDebounceTimer);
+      cloudSyncDebounceTimer = setTimeout(() => {
+        pushToCloud();
+      }, 600);
     }
 
     function initPage() {
@@ -1050,8 +1079,35 @@
             } else {
               currentViewData[itemType].satiety = btn.dataset.val;
             }
+            if (currentViewData[itemType]) {
+              currentViewData[itemType].updatedAt = Date.now();
+            }
+            persistCurrentData();
+            triggerDebouncedCloudSync();
           });
         });
+      });
+
+      // ✍️ 实时监听输入框操作（无论是输入、修改还是清空，实时同步）
+      CARD_TYPES.forEach(type => {
+        const input = document.getElementById('input-' + type);
+        if (input) {
+          // 监听实时打字/清空
+          input.addEventListener('input', () => {
+            if (currentViewDate !== todayKey) return;
+            if (!currentViewData[type]) currentViewData[type] = {};
+            currentViewData[type].text = input.value; // 实时同步文本值（即使清空成空字符串也忠实记录）
+            currentViewData[type].updatedAt = Date.now();
+            persistCurrentData();
+            triggerDebouncedCloudSync();
+          });
+          // 失去焦点时立即确保上传
+          input.addEventListener('blur', () => {
+            if (currentViewDate !== todayKey) return;
+            clearTimeout(cloudSyncDebounceTimer);
+            pushToCloud();
+          });
+        }
       });
 
       // 牛牛头像专属隐藏彩蛋 (连戳 3 次触发)
@@ -1151,7 +1207,7 @@
       document.getElementById('streakBadge').innerText = '已累计打卡 ' + totalValidDays + ' 天';
     }
 
-    // 渲染喝水小组件
+    // 渲染喝水小组件 (点第几个就是几杯，再次点击直接清空)
     function renderWater() {
       const container = document.getElementById('waterCupsContainer');
       container.innerHTML = '';
@@ -1168,7 +1224,9 @@
           cup.disabled = true;
         } else {
           cup.onclick = () => {
-            currentViewData.water = (i === currentViewData.water) ? i - 1 : i;
+            // 点第几个水滴就是几个喝水量，再次点击同样水滴直接水滴清空
+            currentViewData.water = (i === currentViewData.water) ? 0 : i;
+            currentViewData.waterUpdatedAt = Date.now();
             persistCurrentData();
             renderWater();
             pushToCloud();
@@ -1212,14 +1270,14 @@
       if (data.done) {
         card.classList.add('completed');
         if (isToday) {
-          card.classList.add('can-undo'); // 今日完成允许撤回
+          card.classList.add('can-undo'); // 今日完成允许修改
         } else {
           card.classList.remove('can-undo');
         }
 
         const tagExtra = type === 'fitness' ? ` · ${data.duration || '30~60分钟'}` : (data.satiety ? ` · ${data.satiety}` : '');
         timeTag.innerText = `已打卡 ${data.time}${tagExtra}`;
-        input.value = data.text;
+        input.value = data.text !== undefined ? data.text : '';
         input.disabled = true;
         btn.innerText = '✓ 已完成打卡';
         btn.disabled = true;
@@ -1227,7 +1285,7 @@
       } else {
         card.classList.remove('completed');
         card.classList.remove('can-undo');
-        input.value = data.text || '';
+        input.value = data.text !== undefined ? data.text : '';
 
         if (isToday) {
           input.disabled = false;
@@ -1245,21 +1303,21 @@
       }
     }
 
-    // 撤回打卡功能
+    // 修改/撤回打卡功能
     function undoCard(type) {
       if (currentViewDate !== todayKey) return;
       if (!currentViewData[type] || !currentViewData[type].done) return;
 
       currentViewData[type].done = false;
       currentViewData[type].time = '';
-      // 保留 input 输入框里的原内容，方便用户重新修改
+      currentViewData[type].updatedAt = Date.now();
+      // 保留 input 输入框里的内容，方便用户重新修改
 
       persistCurrentData();
       renderCard(type);
       updateStreakBadge();
       pushToCloud();
 
-      // 友好轻量提示
       const typeName = type === 'lunch' ? '午餐' : (type === 'dinner' ? '晚餐' : '健身');
       showModal(`已切换为修改模式，可以重新编辑${typeName}内容啦～✏️`, "✏️");
     }
@@ -1296,6 +1354,7 @@
       currentViewData[type].done = true;
       currentViewData[type].time = timeStr;
       currentViewData[type].text = textVal;
+      currentViewData[type].updatedAt = Date.now();
 
       // 1. 本地立即持久化
       persistCurrentData();
@@ -1469,3 +1528,4 @@
   </script>
 </body>
 </html>
+
