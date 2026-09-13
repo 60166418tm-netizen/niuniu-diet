@@ -691,7 +691,7 @@
         <p id="subGreeting">今天也是认真爱自己的一天</p>
         <div class="tags-row">
           <span class="streak-badge" id="streakBadge">已累计打卡 1 天</span>
-          <span class="cloud-sync-tag offline" id="cloudSyncTag">🧪 测试模式(不上云)</span>
+          <span class="cloud-sync-tag" id="cloudSyncTag">☁️ 已连云端</span>
         </div>
       </div>
     </div>
@@ -959,7 +959,7 @@
       }
     }
 
-    // 将本地数据静默推送到云端
+    // 🛡️ 智能防覆盖推送 (Fetch-Merge-Push 并发安全机制)
     async function pushToCloud() {
       if (IS_TEST_MODE) {
         console.log('【测试模式激活】打卡操作不会上传云端');
@@ -968,8 +968,31 @@
       }
       setCloudStatus('☁️ 保存中...', 'syncing');
       try {
-        const allData = getStoredData();
-        await executeUpstashCommand(['SET', STORAGE_KEY, JSON.stringify(allData)]);
+        // 第一步：先取云端最新实时数据，防止旧界面覆盖对方刚刚打好的项目
+        const response = await executeUpstashCommand(['GET', STORAGE_KEY]);
+        let cloudData = null;
+        if (response && response.result) {
+          try {
+            cloudData = JSON.parse(response.result);
+          } catch (e) {
+            cloudData = null;
+          }
+        }
+
+        // 第二步：将本地最新打卡与云端最新打卡执行字段级深合并
+        const localData = getStoredData();
+        const merged = mergeData(localData, cloudData);
+
+        // 第三步：把拼合好的无损数据包推送到云端，并更新本地
+        await executeUpstashCommand(['SET', STORAGE_KEY, JSON.stringify(merged)]);
+        saveStoredData(merged);
+        currentViewData = merged[currentViewDate] || getEmptyDayData();
+        
+        // 静默刷新界面状态，顺便把对方刚打的卡呈现在自己界面上
+        renderWater();
+        CARD_TYPES.forEach(type => renderCard(type));
+        updateStreakBadge();
+
         setCloudStatus('☁️ 已同步', '');
       } catch (err) {
         console.warn('云端推送稍后重试:', err);
@@ -1465,7 +1488,25 @@
       draw();
     }
 
-    window.onload = initPage;
+    // 页面初始化
+    window.onload = () => {
+      initPage();
+
+      // 🔄 机制1：切回前台自动静默同步 (手机亮屏或从微信切回网页时立即静默拉取)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          console.log('[同步] 切回前台，自动检查云端最新打卡');
+          syncFromCloud();
+        }
+      });
+
+      // 🔄 机制2：网页保持常开时，每隔 45 秒轻量静默轮询一次最新打卡
+      setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          syncFromCloud();
+        }
+      }, 45000);
+    };
   </script>
 </body>
 </html>
