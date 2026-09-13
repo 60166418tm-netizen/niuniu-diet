@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>牛牛的健康减脂打卡记</title>
+  <style>
+    :root {
+      --bg-color: #FFFDF9;
+      --card-bg: #FFFFFF;
+      --primary-green: #7BAE7F;
+      --primary-green-light: #EBF4EC;
+      --primary-green-mid: #A3C9A8;
+      --soft-peach: #FFB5A7;
+      --soft-peach-light: #FDECE9;
+      --warm-yellow: #FED97D;
+      --text-main: #4A4A4A;
+      --text-muted: #8F8F8F;
+      --border-radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 40px;
+      position: relative;
+    }
+
+    /* 历史记录浏览提示条 */
+    .history-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--soft-peach-light);
+      border: 1px solid var(--soft-peach);
+      color: #D9534F;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+    }
+    .history-banner.active {
+      display: flex;
+    }
+    .return-today-btn {
+      background: #FFFFFF;
+      color: #D9534F;
+      border: 1px solid #D9534F;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* 顶部问候与小牛头像 */
+    .header-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 20px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      position: relative;
+    }
+
+    .calendar-trigger-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--primary-green-light);
+      border: none;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--primary-green);
+      font-weight: 600;
+      transition: transform 0.15s ease;
+    }
+    .calendar-trigger-btn:active {
+      transform: scale(0.92);
+    }
+
+    .avatar-wrapper {
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .avatar-wrapper:active {
+      transform: scale(0.9);
+    }
+
+    .greeting-text h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      padding-right: 60px;
+    }
+    .greeting-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    
+    .tags-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .streak-badge {
+      display: inline-block;
+      background: var(--primary-green-light);
+      color: var(--primary-green);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .cloud-sync-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.72rem;
+      color: #6C8E68;
+      background: #F0F7F1;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .cloud-sync-tag.syncing {
+      color: #E67E22;
+      background: #FDF5E6;
+    }
+    .cloud-sync-tag.offline {
+      color: #8E8E93;
+      background: #F2F2F7;
+    }
+
+    /* 喝水小组件 */
+    .water-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .water-cups {
+      display: flex;
+      justify-content: space-between;
+    }
+    .cup-btn {
+      background: #F0F4F8;
+      border: none;
+      border-radius: 10px;
+      width: 38px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.2s ease;
+      color: #90A4AE;
+    }
+    .cup-btn.filled {
+      background: #E1F5FE;
+      color: #03A9F4;
+      transform: scale(1.05);
+    }
+    .cup-btn:disabled {
+      cursor: default;
+      opacity: 0.85;
+      transform: none;
+    }
+
+    /* 打卡卡片通用样式 */
+    .meal-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .meal-card.completed {
+      border-color: var(--primary-green-light);
+      background: #FCFDFB;
+    }
+
+    .meal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .meal-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .meal-header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meal-time-tag {
+      font-size: 0.8rem;
+      color: var(--primary-green);
+      background: var(--primary-green-light);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+      display: none;
+    }
+    .meal-card.completed .meal-time-tag {
+      display: inline-block;
+    }
+
+    /* 修改打卡按钮 */
+    .undo-btn {
+      display: none;
+      background: var(--soft-peach-light);
+      border: 1px solid var(--soft-peach);
+      border-radius: 8px;
+      color: #D35400;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .undo-btn:active {
+      transform: scale(0.92);
+      background: #FCE0DC;
+    }
+    .meal-card.completed.can-undo .undo-btn {
+      display: inline-block;
+    }
+
+    .meal-input {
+      width: 100%;
+      border: 1px solid #ECECEC;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      outline: none;
+      background: #FAFAFA;
+      transition: border-color 0.2s;
+    }
+    .meal-input:focus {
+      border-color: var(--soft-peach);
+      background: #FFFFFF;
+    }
+    .meal-input:disabled {
+      background: #F5F5F5;
+      color: #666666;
+    }
+
+    .satiety-selector {
+      display: flex;
+      gap: 8px;
+    }
+    .satiety-btn {
+      flex: 1;
+      border: 1px solid #EFEFEF;
+      background: #FFFFFF;
+      padding: 6px 4px;
+      font-size: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .satiety-btn.active {
+      background: var(--soft-peach-light);
+      border-color: var(--soft-peach);
+      color: #E05D50;
+      font-weight: 600;
+    }
+    .satiety-btn.disabled-view {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* 健身时长 2x2 舒适宫格排版 (彻底防拥挤) */
+    .duration-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .duration-grid .satiety-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 8px;
+      gap: 2px;
+      line-height: 1.25;
+      border-radius: 12px;
+    }
+    .duration-time {
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .duration-desc {
+      font-size: 0.68rem;
+      white-space: nowrap;
+      opacity: 0.85;
+    }
+    .duration-grid .satiety-btn.active {
+      background: var(--primary-green-light);
+      border-color: var(--primary-green);
+      color: #2F6934;
+      font-weight: 600;
+    }
+
+    /* 果冻感打卡按钮 */
+    .punch-btn {
+      background: var(--primary-green);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(123, 174, 127, 0.3);
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .punch-btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+    .meal-card.completed .punch-btn {
+      background: #ECECEC;
+      color: #A0A0A0;
+      box-shadow: none;
+    }
+    .punch-btn:disabled {
+      cursor: default;
+    }
+    .punch-btn.history-locked {
+      background: #EAEAEA;
+      color: #A8A8A8;
+      box-shadow: none;
+    }
+
+    /* 全页日历抽屉视图 */
+    .calendar-page-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg-color);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .calendar-page-overlay.open {
+      transform: translateY(0);
+    }
+
+    .calendar-wrapper {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cal-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .cal-close-btn {
+      background: var(--card-bg);
+      border: 1px solid #ECECEC;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+    .cal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .cal-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 18px 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .cal-nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .cal-nav-btn {
+      background: #F7F7F7;
+      border: none;
+      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      font-weight: bold;
+    }
+    .cal-current-month {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .cal-day-cell {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: #FAFAFA;
+      color: var(--text-main);
+    }
+    .cal-day-cell.empty {
+      background: transparent;
+      cursor: default;
+    }
+    .cal-day-cell.future {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .cal-day-cell.is-today {
+      border-color: var(--soft-peach);
+      box-shadow: 0 0 0 1px var(--soft-peach);
+      font-weight: 700;
+    }
+    .cal-day-cell.selected {
+      border-color: var(--primary-green) !important;
+      transform: scale(1.05);
+    }
+
+    /* 三档完成度样式 */
+    .cal-day-cell.level-1 {
+      background: var(--primary-green-light);
+      color: #386641;
+      font-weight: 600;
+    }
+    .cal-day-cell.level-2 {
+      background: var(--primary-green-mid);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .cal-day-cell.level-3 {
+      background: var(--primary-green);
+      color: #FFFFFF;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(123, 174, 127, 0.4);
+    }
+
+    .day-badge-icon {
+      position: absolute;
+      bottom: 2px;
+      font-size: 0.55rem;
+      line-height: 1;
+    }
+
+    /* 日历底部等级说明 */
+    .cal-legend {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed #ECECEC;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* 弹窗样式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 24px;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: #FFFFFF;
+      border-radius: 24px;
+      padding: 24px;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+      transform: scale(0.85);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+    .modal-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+    .modal-msg {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .modal-close-btn {
+      background: var(--soft-peach);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 满屏动效 Canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="container">
+    <!-- 历史记录回溯提示栏 -->
+    <div class="history-banner" id="historyBanner">
+      <span id="historyBannerText">📅 正在浏览历史打卡记录</span>
+      <button class="return-today-btn" onclick="switchDate(getTodayKey())">返回今天</button>
+    </div>
+
+    <!-- 顶部状态栏 -->
+    <div class="header-card">
+      <button class="calendar-trigger-btn" onclick="openCalendar()">
+        <span>📅</span>
+        <span>打卡历</span>
+      </button>
+
+      <div class="avatar-wrapper" id="cowAvatar" title="戳一戳牛牛">
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+          <circle cx="24" cy="38" r="14" fill="#FDECE9" stroke="#4A4A4A" stroke-width="3"/>
+          <circle cx="76" cy="38" r="14" fill="#FDECE9" stroke="#4A4A4A" stroke-width="3"/>
+          <path d="M 28 32 Q 20 16 34 22" fill="#FED97D" stroke="#4A4A4A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 72 32 Q 80 16 66 22" fill="#FED97D" stroke="#4A4A4A" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="50" cy="52" rx="36" ry="32" fill="#FFFFFF" stroke="#4A4A4A" stroke-width="3"/>
+          <ellipse cx="40" cy="48" rx="3.5" ry="5" fill="#4A4A4A"/>
+          <ellipse cx="60" cy="48" rx="3.5" ry="5" fill="#4A4A4A"/>
+          <circle cx="41.5" cy="46" r="1.5" fill="#FFFFFF"/>
+          <circle cx="61.5" cy="46" r="1.5" fill="#FFFFFF"/>
+          <circle cx="30" cy="56" r="5" fill="#FFAAA6" opacity="0.6"/>
+          <circle cx="70" cy="56" r="5" fill="#FFAAA6" opacity="0.6"/>
+          <ellipse cx="50" cy="66" rx="20" ry="13" fill="#FDECE9" stroke="#4A4A4A" stroke-width="3"/>
+          <circle cx="44" cy="65" r="2.5" fill="#4A4A4A"/>
+          <circle cx="56" cy="65" r="2.5" fill="#4A4A4A"/>
+        </svg>
+      </div>
+      <div class="greeting-text">
+        <h2 id="greetingMsg">早安，牛牛！</h2>
+        <p id="subGreeting">今天也是认真爱自己的一天</p>
+        <div class="tags-row">
+          <span class="streak-badge" id="streakBadge">已累计打卡 1 天</span>
+          <span class="cloud-sync-tag offline" id="cloudSyncTag">🧪 测试模式(不上云)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 喝水追踪 -->
+    <div class="water-card">
+      <div class="card-title-row">
+        <span class="card-title">💧 今日喝水打卡</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="waterCount">0 / 8 杯 (0ml)</span>
+      </div>
+      <div class="water-cups" id="waterCupsContainer"></div>
+    </div>
+
+    <!-- 午餐卡片 -->
+    <div class="meal-card" id="card-lunch">
+      <div class="meal-header">
+        <div class="meal-title">🍱 午餐</div>
+        <div class="meal-header-right">
+          <div class="meal-time-tag" id="time-lunch"></div>
+          <button class="undo-btn" id="undo-lunch" onclick="undoCard('lunch')">修改</button>
+        </div>
+      </div>
+      <input type="text" class="meal-input" id="input-lunch" placeholder="例如：香煎鸡胸肉 + 西蓝花 + 紫薯">
+      <div class="satiety-selector" data-item="lunch">
+        <button class="satiety-btn active" data-val="刚好">😋 刚刚好</button>
+        <button class="satiety-btn" data-val="清爽">🥗 七分饱</button>
+        <button class="satiety-btn" data-val="偏饱">🍲 很满足</button>
+      </div>
+      <button class="punch-btn" onclick="punchCard('lunch')">完成午餐打卡</button>
+    </div>
+
+    <!-- 晚餐卡片 -->
+    <div class="meal-card" id="card-dinner">
+      <div class="meal-header">
+        <div class="meal-title">🍲 晚餐</div>
+        <div class="meal-header-right">
+          <div class="meal-time-tag" id="time-dinner"></div>
+          <button class="undo-btn" id="undo-dinner" onclick="undoCard('dinner')">修改</button>
+        </div>
+      </div>
+      <input type="text" class="meal-input" id="input-dinner" placeholder="例如：大虾蔬菜沙拉 + 无糖豆浆">
+      <div class="satiety-selector" data-item="dinner">
+        <button class="satiety-btn active" data-val="刚好">😋 刚刚好</button>
+        <button class="satiety-btn" data-val="清爽">🥗 七分饱</button>
+        <button class="satiety-btn" data-val="偏饱">🍲 很满足</button>
+      </div>
+      <button class="punch-btn" onclick="punchCard('dinner')">完成晚餐打卡</button>
+    </div>
+
+    <!-- 健身运动卡片 (新增，紧跟晚餐下方) -->
+    <div class="meal-card" id="card-fitness">
+      <div class="meal-header">
+        <div class="meal-title">🏃‍♀️ 健身</div>
+        <div class="meal-header-right">
+          <div class="meal-time-tag" id="time-fitness"></div>
+          <button class="undo-btn" id="undo-fitness" onclick="undoCard('fitness')">修改</button>
+        </div>
+      </div>
+      <input type="text" class="meal-input" id="input-fitness" placeholder="例如：帕梅拉全身燃脂 / 慢跑 3km / 普拉提拉伸">
+      <div class="satiety-selector duration-grid" data-item="fitness">
+        <button class="satiety-btn" data-val="30分钟以内">
+          <span class="duration-time">🌱 30分钟以内</span>
+          <span class="duration-desc">(轻量激活)</span>
+        </button>
+        <button class="satiety-btn active" data-val="30~60分钟">
+          <span class="duration-time">🔥 30~60分钟</span>
+          <span class="duration-desc">(常规燃脂)</span>
+        </button>
+        <button class="satiety-btn" data-val="60~90分钟">
+          <span class="duration-time">💪 60~90分钟</span>
+          <span class="duration-desc">(深度暴汗)</span>
+        </button>
+        <button class="satiety-btn" data-val="90分钟以上">
+          <span class="duration-time">👑 90分钟以上</span>
+          <span class="duration-desc">(自律战神)</span>
+        </button>
+      </div>
+      <button class="punch-btn" onclick="punchCard('fitness')">完成健身打卡</button>
+    </div>
+  </div>
+
+  <!-- 全页展开日历组件 -->
+  <div class="calendar-page-overlay" id="calendarOverlay">
+    <div class="calendar-wrapper">
+      <div class="cal-header-bar">
+        <button class="cal-close-btn" onclick="closeCalendar()">← 返回打卡</button>
+        <div class="cal-title">牛牛的打卡足迹</div>
+        <div style="width: 70px;"></div>
+      </div>
+
+      <div class="cal-card">
+        <div class="cal-nav-row">
+          <button class="cal-nav-btn" onclick="changeCalMonth(-1)">‹</button>
+          <div class="cal-current-month" id="calMonthTitle">2026年 9月</div>
+          <button class="cal-nav-btn" onclick="changeCalMonth(1)">›</button>
+        </div>
+
+        <div class="cal-weekdays">
+          <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+        </div>
+
+        <div class="cal-grid" id="calGrid"></div>
+
+        <div class="cal-legend">
+          <div class="legend-item">
+            <span class="legend-dot" style="background: var(--primary-green-light); border: 1px solid #CDE2CF;"></span>
+            <span>1项 🌱</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background: var(--primary-green-mid);"></span>
+            <span>2项 🌸</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background: var(--primary-green);"></span>
+            <span>3项满卡 👑</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 鼓励与提醒弹窗 -->
+  <div class="modal-overlay" id="cheerModal">
+    <div class="modal-content">
+      <div class="modal-icon" id="modalIcon">🎉</div>
+      <div class="modal-msg" id="modalQuote">打卡成功！</div>
+      <button class="modal-close-btn" onclick="closeModal()">知道啦 (收下鼓励)</button>
+    </div>
+  </div>
+
+  <script>
+    // 专属鼓励语库
+    const cheerQuotes = [
+      "牛牛今天也超级自律，为你骄傲！",
+      "按时好好吃饭、认真运动的小牛最可爱啦~",
+      "减脂是爱自己的过程，每一步都算数！",
+      "今天吃得健康又有营养，给你一个大大的隔空拥抱~",
+      "慢慢来，保持节奏，自律的牛牛闪闪发光！",
+      "运动完的小牛闪闪发光，流的每一滴汗都是变美的痕迹！",
+      "今天也是自律满分的小牛，多喝温水好好拉伸哦~",
+      "太厉害啦！动起来的小牛最有活力，抱抱辛苦的小牛！"
+    ];
+
+    // ================= Upstash 云端存储配置 =================
+    const UPSTASH_URL = "https://vocal-longhorn-102685.upstash.io";
+    const UPSTASH_TOKEN = "gQAAAAAAAZEdAAIgcDEyYzhiMTAxMGQ2Njg0ZmJhYmY3OWYxYWE1MTc1ODZmOQ";
+    const STORAGE_KEY = "niuniu_diet_data";
+
+    // 🧪 测试模式开关：true 表示开启测试模式（不写本地，不上报云端）
+    const IS_TEST_MODE = false;
+
+    // 打卡卡片类型 (午餐、晚餐、健身)
+    const CARD_TYPES = ['lunch', 'dinner', 'fitness'];
+
+    // 各卡片默认输入提示示例
+    const DEFAULT_PLACEHOLDERS = {
+      lunch: '例如：香煎鸡胸肉 + 西蓝花 + 紫薯',
+      dinner: '例如：大虾蔬菜沙拉 + 无糖豆浆',
+      fitness: '例如：帕梅拉全身燃脂 / 慢跑 3km / 普拉提拉伸'
+    };
+
+    // 日期工具函数
+    function getTodayKey() {
+      const now = new Date();
+      return formatDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    }
+
+    function formatDate(year, month, day) {
+      return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    }
+
+    // 🧪 测试模式专用的独立内存沙盒（刷新即焚，不污染正式环境）
+    let sandboxMemoryStore = null;
+
+    // 本地存储读取 (测试模式下使用独立沙盒)
+    function getStoredData() {
+      if (IS_TEST_MODE) {
+        if (!sandboxMemoryStore) {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            sandboxMemoryStore = raw ? JSON.parse(raw) : {};
+          } catch (e) {
+            sandboxMemoryStore = {};
+          }
+        }
+        return sandboxMemoryStore;
+      }
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // 本地存储保存 (测试模式下仅更新内存，绝不写硬盘)
+    function saveStoredData(data) {
+      if (IS_TEST_MODE) {
+        sandboxMemoryStore = data;
+        return;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('LocalStorage write error:', e);
+      }
+    }
+
+    // 更新云同步状态提示
+    function setCloudStatus(text, type) {
+      const el = document.getElementById('cloudSyncTag');
+      if (!el) return;
+      el.innerText = text;
+      el.className = 'cloud-sync-tag' + (type ? ' ' + type : '');
+    }
+
+    // Upstash REST API 通用调用
+    async function executeUpstashCommand(commandArray) {
+      const res = await fetch(UPSTASH_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + UPSTASH_TOKEN,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(commandArray)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    }
+
+    // 从云端拉取数据并合并
+    async function syncFromCloud() {
+      setCloudStatus('☁️ 同步中...', 'syncing');
+      try {
+        const response = await executeUpstashCommand(['GET', STORAGE_KEY]);
+        const localData = getStoredData();
+        let cloudData = null;
+
+        if (response && response.result) {
+          try {
+            cloudData = JSON.parse(response.result);
+          } catch (e) {
+            cloudData = null;
+          }
+        }
+
+        // 合并本地与云端数据
+        const merged = mergeData(localData, cloudData);
+        saveStoredData(merged);
+
+        // 如果云端为空或本地有更新，回写云端 (测试模式下严格禁止回写)
+        if (!IS_TEST_MODE && (!cloudData || JSON.stringify(merged) !== JSON.stringify(cloudData))) {
+          await executeUpstashCommand(['SET', STORAGE_KEY, JSON.stringify(merged)]);
+        }
+
+        if (IS_TEST_MODE) {
+          setCloudStatus('🧪 测试模式(不上云)', 'offline');
+        } else {
+          setCloudStatus('☁️ 已同步', '');
+        }
+        switchDate(currentViewDate);
+      } catch (err) {
+        console.warn('云端同步稍后重试:', err);
+        setCloudStatus('☁️ 本地模式', 'offline');
+      }
+    }
+
+    // 将本地数据静默推送到云端
+    async function pushToCloud() {
+      if (IS_TEST_MODE) {
+        console.log('【测试模式激活】打卡操作不会上传云端');
+        setCloudStatus('🧪 测试中(不上云)', 'offline');
+        return;
+      }
+      setCloudStatus('☁️ 保存中...', 'syncing');
+      try {
+        const allData = getStoredData();
+        await executeUpstashCommand(['SET', STORAGE_KEY, JSON.stringify(allData)]);
+        setCloudStatus('☁️ 已同步', '');
+      } catch (err) {
+        console.warn('云端推送稍后重试:', err);
+        setCloudStatus('☁️ 本地待同步', 'offline');
+      }
+    }
+
+    // 智能双向合并规则
+    function mergeData(local, cloud) {
+      if (!cloud) return local || {};
+      if (!local) return cloud || {};
+      const result = { ...local };
+
+      for (const dateKey of Object.keys(cloud)) {
+        if (!result[dateKey]) {
+          result[dateKey] = cloud[dateKey];
+        } else {
+          const lDay = result[dateKey];
+          const cDay = cloud[dateKey];
+          result[dateKey] = {
+            water: Math.max(lDay.water || 0, cDay.water || 0),
+            lunch: (cDay.lunch && cDay.lunch.done) ? cDay.lunch : (lDay.lunch || { done: false, time: '', text: '', satiety: '刚好' }),
+            dinner: (cDay.dinner && cDay.dinner.done) ? cDay.dinner : (lDay.dinner || { done: false, time: '', text: '', satiety: '刚好' }),
+            fitness: (cDay.fitness && cDay.fitness.done) ? cDay.fitness : (lDay.fitness || { done: false, time: '', text: '', duration: '40' })
+          };
+        }
+      }
+      return result;
+    }
+
+    // 当前视图正在查看的日期（默认为今天）
+    let currentViewDate = getTodayKey();
+    let currentViewData = {};
+    const todayKey = getTodayKey();
+
+    // 日历视图浏览状态
+    let calDisplayYear = new Date().getFullYear();
+    let calDisplayMonth = new Date().getMonth(); // 0-11
+
+    function getEmptyDayData() {
+      return {
+        water: 0,
+        lunch: { done: false, time: '', text: '', satiety: '刚好' },
+        dinner: { done: false, time: '', text: '', satiety: '刚好' },
+        fitness: { done: false, time: '', text: '', duration: '30~60分钟' }
+      };
+    }
+
+    // 计算某一天的打卡完成等级 (0: 未打卡, 1: 1项, 2: 2项, 3: 3项满级)
+    function getDayLevel(dayRecord) {
+      if (!dayRecord) return 0;
+      let count = 0;
+      if (dayRecord.lunch && dayRecord.lunch.done) count++;
+      if (dayRecord.dinner && dayRecord.dinner.done) count++;
+      if (dayRecord.fitness && dayRecord.fitness.done) count++;
+      return count;
+    }
+
+    function initPage() {
+      // 1. 本地立即渲染（0毫秒秒开）
+      switchDate(todayKey);
+
+      // 2. 异步连云端同步最新数据
+      syncFromCloud();
+
+      // 饱腹感 / 健身时长选择器绑定
+      document.querySelectorAll('.satiety-selector').forEach(container => {
+        const itemType = container.dataset.item;
+        const btns = container.querySelectorAll('.satiety-btn');
+        btns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (currentViewDate !== todayKey) return;
+            if (currentViewData[itemType] && currentViewData[itemType].done) return;
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (itemType === 'fitness') {
+              currentViewData.fitness.duration = btn.dataset.val;
+            } else {
+              currentViewData[itemType].satiety = btn.dataset.val;
+            }
+          });
+        });
+      });
+
+      // 牛牛头像专属隐藏彩蛋 (连戳 3 次触发)
+      const secretWhispers = [
+        "🐮 叮！收到一条专属密语：无论胖瘦，在某人心里你永远最可爱～",
+        "🐮 戳一戳小牛发现：今天也是超喜欢牛牛的一天！",
+        "🐮 恭喜解锁隐藏成就：全世界最会认真生活的小牛！",
+        "🐮 叮咚！检测到一只自律的小可爱，奖励一个大大的隔空抱抱～",
+        "🐮 某人悄悄托小牛带句话：别给自己太大压力，健康开心的你最闪闪发光。",
+        "🐮 叮！你拍了拍小牛，小牛并向你发射了 100 颗小心心 ❤️",
+        "🐮 专属小纸条：肚子吃饱饱，烦恼全跑掉！今天也要元气满满哦~",
+        "🐮 小牛悄悄说：坚持的每一步，都有人在背后默默为你加油喝彩！",
+        "🐮 叮！来自男朋友的特别提醒：多喝水，按时吃饭，运动后好好拉伸，想你啦！",
+        "🐮 哇！连戳三次被你发现啦～你是这个星球上独一无二的宝藏小牛！",
+        "🐮 秘密情报曝光：据可靠线报，某人今天正在超级无敌想念牛牛～",
+        "🐮 叮！减脂是长跑，慢慢来比较快，你现在的节奏就已经超棒啦！"
+      ];
+      let cowClicks = 0;
+      let lastWhisperIdx = -1;
+      let cowClickTimer = null;
+
+      document.getElementById('cowAvatar').addEventListener('click', () => {
+        cowClicks++;
+        clearTimeout(cowClickTimer);
+        // 1.5秒内连戳有效
+        cowClickTimer = setTimeout(() => { cowClicks = 0; }, 1500);
+
+        if (cowClicks === 3) {
+          triggerConfetti();
+          let randIdx;
+          do {
+            randIdx = Math.floor(Math.random() * secretWhispers.length);
+          } while (randIdx === lastWhisperIdx && secretWhispers.length > 1);
+          lastWhisperIdx = randIdx;
+
+          showModal(secretWhispers[randIdx], "🐮");
+          cowClicks = 0;
+        }
+      });
+    }
+
+    // 切换查看的日期
+    function switchDate(targetDateKey) {
+      currentViewDate = targetDateKey;
+      const allData = getStoredData();
+      currentViewData = allData[currentViewDate] || getEmptyDayData();
+
+      const isToday = (currentViewDate === todayKey);
+      const isPast = (currentViewDate < todayKey);
+
+      // 顶部提示条控制
+      const banner = document.getElementById('historyBanner');
+      const bannerText = document.getElementById('historyBannerText');
+      if (!isToday) {
+        banner.classList.add('active');
+        const parts = currentViewDate.split('-');
+        bannerText.innerText = '📅 正在查看 ' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日 的打卡历史 (只读)';
+      } else {
+        banner.classList.remove('active');
+      }
+
+      // 动态问候语
+      const hour = new Date().getHours();
+      const greetingEl = document.getElementById('greetingMsg');
+      const subGreetingEl = document.getElementById('subGreeting');
+
+      if (isToday) {
+        if (hour < 10) greetingEl.innerText = "早安，牛牛！";
+        else if (hour < 14) greetingEl.innerText = "午安，牛牛！";
+        else if (hour < 18) greetingEl.innerText = "下午好，牛牛！";
+        else greetingEl.innerText = "晚上好，牛牛！";
+        subGreetingEl.innerText = "今天也是认真爱自己的一天";
+      } else {
+        const parts = currentViewDate.split('-');
+        greetingEl.innerText = parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日 打卡记录';
+        subGreetingEl.innerText = isPast ? "温习自律的点滴回忆～" : "未来的计划还没到来呢";
+      }
+
+      // 更新累计天数
+      updateStreakBadge();
+
+      // 渲染喝水与各项打卡卡片
+      renderWater();
+      CARD_TYPES.forEach(type => {
+        renderCard(type);
+      });
+    }
+
+    function updateStreakBadge() {
+      const allData = getStoredData();
+      let totalValidDays = 0;
+      Object.keys(allData).forEach(key => {
+        if (getDayLevel(allData[key]) > 0) {
+          totalValidDays++;
+        }
+      });
+      document.getElementById('streakBadge').innerText = '已累计打卡 ' + totalValidDays + ' 天';
+    }
+
+    // 渲染喝水小组件
+    function renderWater() {
+      const container = document.getElementById('waterCupsContainer');
+      container.innerHTML = '';
+      const count = currentViewData.water || 0;
+      const isToday = (currentViewDate === todayKey);
+
+      document.getElementById('waterCount').innerText = count + ' / 8 杯 (' + (count * 250) + 'ml)';
+
+      for (let i = 1; i <= 8; i++) {
+        const cup = document.createElement('button');
+        cup.className = 'cup-btn ' + (i <= count ? 'filled' : '');
+        cup.innerText = '💧';
+        if (!isToday) {
+          cup.disabled = true;
+        } else {
+          cup.onclick = () => {
+            currentViewData.water = (i === currentViewData.water) ? i - 1 : i;
+            persistCurrentData();
+            renderWater();
+            pushToCloud();
+          };
+        }
+        container.appendChild(cup);
+      }
+    }
+
+    // 渲染打卡卡片 (午餐、晚餐、健身)
+    function renderCard(type) {
+      const card = document.getElementById('card-' + type);
+      if (!card) return;
+
+      const data = currentViewData[type] || (type === 'fitness' 
+        ? { done: false, time: '', text: '', duration: '30~60分钟' } 
+        : { done: false, time: '', text: '', satiety: '刚好' });
+
+      const timeTag = document.getElementById('time-' + type);
+      const input = document.getElementById('input-' + type);
+      const btn = card.querySelector('.punch-btn');
+      const isToday = (currentViewDate === todayKey);
+
+      // 设置选择器状态
+      const selectorBtns = card.querySelectorAll('.satiety-btn');
+      const targetVal = type === 'fitness' ? (data.duration || '30~60分钟') : (data.satiety || '刚好');
+      selectorBtns.forEach(b => {
+        b.classList.remove('active');
+        if (b.dataset.val === targetVal) {
+          b.classList.add('active');
+        }
+        if (!isToday || data.done) {
+          b.classList.add('disabled-view');
+        } else {
+          b.classList.remove('disabled-view');
+        }
+      });
+
+      const typeName = type === 'lunch' ? '午餐' : (type === 'dinner' ? '晚餐' : '健身');
+
+      if (data.done) {
+        card.classList.add('completed');
+        if (isToday) {
+          card.classList.add('can-undo'); // 今日完成允许撤回
+        } else {
+          card.classList.remove('can-undo');
+        }
+
+        const tagExtra = type === 'fitness' ? ` · ${data.duration || '30~60分钟'}` : (data.satiety ? ` · ${data.satiety}` : '');
+        timeTag.innerText = `已打卡 ${data.time}${tagExtra}`;
+        input.value = data.text;
+        input.disabled = true;
+        btn.innerText = '✓ 已完成打卡';
+        btn.disabled = true;
+        btn.classList.remove('history-locked');
+      } else {
+        card.classList.remove('completed');
+        card.classList.remove('can-undo');
+        input.value = data.text || '';
+
+        if (isToday) {
+          input.disabled = false;
+          input.placeholder = DEFAULT_PLACEHOLDERS[type] || '请输入打卡内容';
+          btn.innerText = type === 'fitness' ? '完成健身打卡' : `完成${typeName}打卡`;
+          btn.disabled = false;
+          btn.classList.remove('history-locked');
+        } else {
+          input.disabled = true;
+          input.placeholder = '当天空白，未记录打卡';
+          btn.innerText = '未打卡 (历史记录已归档)';
+          btn.disabled = true;
+          btn.classList.add('history-locked');
+        }
+      }
+    }
+
+    // 撤回打卡功能
+    function undoCard(type) {
+      if (currentViewDate !== todayKey) return;
+      if (!currentViewData[type] || !currentViewData[type].done) return;
+
+      currentViewData[type].done = false;
+      currentViewData[type].time = '';
+      // 保留 input 输入框里的原内容，方便用户重新修改
+
+      persistCurrentData();
+      renderCard(type);
+      updateStreakBadge();
+      pushToCloud();
+
+      // 友好轻量提示
+      const typeName = type === 'lunch' ? '午餐' : (type === 'dinner' ? '晚餐' : '健身');
+      showModal(`已切换为修改模式，可以重新编辑${typeName}内容啦～✏️`, "✏️");
+    }
+
+    // 今日打卡动作 (必填校验 + 乐观更新)
+    function punchCard(type) {
+      if (currentViewDate !== todayKey) return;
+      if (currentViewData[type] && currentViewData[type].done) return;
+
+      const input = document.getElementById('input-' + type);
+      const textVal = input.value.trim();
+
+      // 必填输入校验与活泼提醒
+      if (!textVal) {
+        if (type === 'fitness') {
+          showModal("🏃‍♀️ 抓到一只偷懒小牛！今天练了什么秘密武器？快写上再打卡吧～💪", "👀");
+        } else if (type === 'lunch') {
+          showModal("🍱 嗷呜！午餐吃了什么美味减脂餐？偷偷告诉我再打卡嘛～😋", "🥢");
+        } else if (type === 'dinner') {
+          showModal("🍲 晚餐写个名字呗！牛牛今天吃了什么清爽健康的好吃的？🥗", "✨");
+        } else {
+          showModal("👀 还没有写内容呢，写几个字让某人夸夸你～", "📝");
+        }
+        input.focus();
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      if (!currentViewData[type]) {
+        currentViewData[type] = {};
+      }
+      currentViewData[type].done = true;
+      currentViewData[type].time = timeStr;
+      currentViewData[type].text = textVal;
+
+      // 1. 本地立即持久化
+      persistCurrentData();
+      renderCard(type);
+      updateStreakBadge();
+
+      // 2. 动效与弹窗即刻触发
+      triggerConfetti();
+      const randomQuote = cheerQuotes[Math.floor(Math.random() * cheerQuotes.length)];
+      showModal(randomQuote, "🎉");
+
+      // 3. 后台静默推送到 Upstash
+      pushToCloud();
+    }
+
+    function persistCurrentData() {
+      const allData = getStoredData();
+      allData[currentViewDate] = currentViewData;
+      saveStoredData(allData);
+      if (IS_TEST_MODE) {
+        console.log('【测试模式】仅更新沙盒内存，未写入本地正式库，未上传云端');
+      }
+    }
+
+    // 日历相关逻辑
+    function openCalendar() {
+      // 每次打开日历时，自动重置对齐到当前视图日期对应的年月（在今天页面即自动回到当月）
+      if (currentViewDate) {
+        const parts = currentViewDate.split('-');
+        calDisplayYear = parseInt(parts[0], 10);
+        calDisplayMonth = parseInt(parts[1], 10) - 1;
+      } else {
+        const now = new Date();
+        calDisplayYear = now.getFullYear();
+        calDisplayMonth = now.getMonth();
+      }
+      renderCalendar();
+      document.getElementById('calendarOverlay').classList.add('open');
+    }
+
+    function closeCalendar() {
+      document.getElementById('calendarOverlay').classList.remove('open');
+    }
+
+    function changeCalMonth(offset) {
+      calDisplayMonth += offset;
+      if (calDisplayMonth < 0) {
+        calDisplayMonth = 11;
+        calDisplayYear--;
+      } else if (calDisplayMonth > 11) {
+        calDisplayMonth = 0;
+        calDisplayYear++;
+      }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      document.getElementById('calMonthTitle').innerText = calDisplayYear + '年 ' + (calDisplayMonth + 1) + '月';
+
+      const grid = document.getElementById('calGrid');
+      grid.innerHTML = '';
+
+      const allData = getStoredData();
+
+      const firstDayIndex = new Date(calDisplayYear, calDisplayMonth, 1).getDay();
+      const daysInMonth = new Date(calDisplayYear, calDisplayMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'cal-day-cell empty';
+        grid.appendChild(emptyCell);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = formatDate(calDisplayYear, calDisplayMonth + 1, d);
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell';
+        cell.innerText = d;
+
+        const isToday = (dateKey === todayKey);
+        const isFuture = (dateKey > todayKey);
+        const isSelected = (dateKey === currentViewDate);
+
+        if (isToday) cell.classList.add('is-today');
+        if (isSelected) cell.classList.add('selected');
+        if (isFuture) cell.classList.add('future');
+
+        // 计算该日期的完成等级 (0~3)
+        const level = getDayLevel(allData[dateKey]);
+        if (level > 0) {
+          cell.classList.add('level-' + level);
+          const badge = document.createElement('span');
+          badge.className = 'day-badge-icon';
+          if (level === 1) badge.innerText = '🌱';
+          else if (level === 2) badge.innerText = '🌸';
+          else if (level === 3) badge.innerText = '👑';
+          cell.appendChild(badge);
+        }
+
+        if (!isFuture) {
+          cell.onclick = () => {
+            switchDate(dateKey);
+            closeCalendar();
+          };
+        }
+
+        grid.appendChild(cell);
+      }
+    }
+
+    // 弹窗与粒子动效
+    function showModal(msg, icon) {
+      document.getElementById('modalQuote').innerText = msg;
+      document.getElementById('modalIcon').innerText = icon || "🎉";
+      document.getElementById('cheerModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('cheerModal').classList.remove('active');
+    }
+
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#7BAE7F', '#FFB5A7', '#FED97D', '#84DCC6', '#FFAAA6'];
+
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          r: Math.random() * 6 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.5) * 12 - 4,
+          gravity: 0.2,
+          alpha: 1
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.alpha -= 0.012;
+
+          if (p.alpha > 0) {
+            active = true;
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+
+        if (active) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+
+    window.onload = initPage;
+  </script>
+</body>
+</html>
