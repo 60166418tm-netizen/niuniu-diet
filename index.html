@@ -790,7 +790,7 @@
         </div>
 
         <div class="cal-weekdays">
-          <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+          <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
         </div>
 
         <div class="cal-grid" id="calGrid"></div>
@@ -1419,7 +1419,7 @@
 
       const allData = getStoredData();
 
-      const firstDayIndex = new Date(calDisplayYear, calDisplayMonth, 1).getDay();
+      const firstDayIndex = (new Date(calDisplayYear, calDisplayMonth, 1).getDay() + 6) % 7; // 周一为0, 周日为6
       const daysInMonth = new Date(calDisplayYear, calDisplayMonth + 1, 0).getDate();
 
       for (let i = 0; i < firstDayIndex; i++) {
