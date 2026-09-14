@@ -1,0 +1,385 @@
+/* 历史记录浏览提示条 */
+.history-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--soft-peach-light);
+  border: 1px solid var(--soft-peach);
+  color: #D9534F;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+.history-banner.active {
+  display: flex;
+}
+.return-today-btn {
+  background: #FFFFFF;
+  color: #D9534F;
+  border: 1px solid #D9534F;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* 顶部问候与小牛头像卡片 */
+.header-card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.avatar-wrapper {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.avatar-wrapper:active {
+  transform: scale(0.9);
+}
+
+.greeting-text h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+  padding-right: 60px;
+}
+.greeting-text p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.tags-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.streak-badge {
+  display: inline-block;
+  background: var(--primary-green-light);
+  color: var(--primary-green);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.cloud-sync-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: #6C8E68;
+  background: #F0F7F1;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+.cloud-sync-tag.syncing {
+  color: #E67E22;
+  background: #FDF5E6;
+}
+.cloud-sync-tag.offline {
+  color: #8E8E93;
+  background: #F2F2F7;
+}
+
+/* 喝水小组件 */
+.water-card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.water-cups {
+  display: flex;
+  justify-content: space-between;
+}
+.cup-btn {
+  background: #F0F4F8;
+  border: none;
+  border-radius: 10px;
+  width: 38px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  color: #90A4AE;
+}
+.cup-btn.filled {
+  background: #E1F5FE;
+  color: #03A9F4;
+  transform: scale(1.05);
+}
+.cup-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+  transform: none;
+}
+
+/* 打卡卡片通用样式 */
+.meal-card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.meal-card.completed {
+  border-color: var(--primary-green-light);
+  background: #FCFDFB;
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.meal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.meal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meal-time-tag {
+  font-size: 0.8rem;
+  color: var(--primary-green);
+  background: var(--primary-green-light);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  display: none;
+}
+.meal-card.completed .meal-time-tag {
+  display: inline-block;
+}
+
+/* 修改打卡按钮 */
+.undo-btn {
+  display: none;
+  background: var(--soft-peach-light);
+  border: 1px solid var(--soft-peach);
+  border-radius: 8px;
+  color: #D35400;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.undo-btn:active {
+  transform: scale(0.92);
+  background: #FCE0DC;
+}
+.meal-card.completed.can-undo .undo-btn {
+  display: inline-block;
+}
+
+.meal-input {
+  width: 100%;
+  border: 1px solid #ECECEC;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+  background: #FAFAFA;
+  transition: border-color 0.2s;
+}
+.meal-input:focus {
+  border-color: var(--soft-peach);
+  background: #FFFFFF;
+}
+.meal-input:disabled {
+  background: #F5F5F5;
+  color: #666666;
+}
+
+.satiety-selector {
+  display: flex;
+  gap: 8px;
+}
+.satiety-btn {
+  flex: 1;
+  border: 1px solid #EFEFEF;
+  background: #FFFFFF;
+  padding: 6px 4px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  text-align: center;
+}
+.satiety-btn.active {
+  background: var(--soft-peach-light);
+  border-color: var(--soft-peach);
+  color: #E05D50;
+  font-weight: 600;
+}
+.satiety-btn.disabled-view {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* 健身时长 2x2 舒适宫格排版 (彻底防拥挤) */
+.duration-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.duration-grid .satiety-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 8px;
+  gap: 2px;
+  line-height: 1.25;
+  border-radius: 12px;
+}
+.duration-time {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.duration-desc {
+  font-size: 0.68rem;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.duration-grid .satiety-btn.active {
+  background: var(--primary-green-light);
+  border-color: var(--primary-green);
+  color: #2F6934;
+  font-weight: 600;
+}
+
+/* 果冻感打卡按钮 */
+.punch-btn {
+  background: var(--primary-green);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(123, 174, 127, 0.3);
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.punch-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.meal-card.completed .punch-btn {
+  background: #ECECEC;
+  color: #A0A0A0;
+  box-shadow: none;
+}
+.punch-btn:disabled {
+  cursor: default;
+}
+.punch-btn.history-locked {
+  background: #EAEAEA;
+  color: #A8A8A8;
+  box-shadow: none;
+}
+
+/* 鼓励与提醒弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  padding: 24px;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal-content {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  transform: scale(0.85);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.active .modal-content {
+  transform: scale(1);
+}
+.modal-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+.modal-msg {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+.modal-close-btn {
+  background: var(--soft-peach);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
