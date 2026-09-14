@@ -96,14 +96,31 @@ function mergeData(local, cloud) {
         return lMeal;
       }
 
+      function pickLatestWaterDay() {
+        const lTime = lDay.waterUpdatedAt || 0;
+        const cTime = cDay.waterUpdatedAt || 0;
+        if (lTime !== cTime) return lTime > cTime ? lDay : cDay;
+        const localHasExactMl = lDay.waterMl !== undefined && lDay.waterMl !== null;
+        const cloudHasExactMl = cDay.waterMl !== undefined && cDay.waterMl !== null;
+        if (localHasExactMl !== cloudHasExactMl) return localHasExactMl ? lDay : cDay;
+        return lDay;
+      }
+
+      const waterSource = pickLatestWaterDay();
+      const sourceWaterMl = waterSource.waterMl !== undefined && waterSource.waterMl !== null
+        ? Math.max(0, Math.round(Number(waterSource.waterMl) || 0))
+        : Math.max(0, Math.round((Number(waterSource.water) || 0) * 250));
+
       result[dateKey] = {
-        water: (lDay.waterUpdatedAt && cDay.waterUpdatedAt)
-          ? (lDay.waterUpdatedAt >= cDay.waterUpdatedAt ? (lDay.water || 0) : (cDay.water || 0))
-          : (lDay.water !== undefined ? lDay.water : (cDay.water || 0)),
+        ...cDay,
+        ...lDay,
+        // 同时保留新版毫升值与旧版杯数，旧页面仍能读取且不会覆盖精确数据
+        water: waterSource.water !== undefined ? waterSource.water : sourceWaterMl / 250,
+        waterMl: sourceWaterMl,
         waterUpdatedAt: Math.max(lDay.waterUpdatedAt || 0, cDay.waterUpdatedAt || 0),
         lunch: pickLatestMeal(lDay.lunch, cDay.lunch, { done: false, time: '', text: '', satiety: '刚好', updatedAt: 0 }),
         dinner: pickLatestMeal(lDay.dinner, cDay.dinner, { done: false, time: '', text: '', satiety: '刚好', updatedAt: 0 }),
-        fitness: pickLatestMeal(lDay.fitness, cDay.fitness, { done: false, time: '', text: '', duration: '30~60分钟', updatedAt: 0 })
+        fitness: pickLatestMeal(lDay.fitness, cDay.fitness, { done: false, time: '', text: '', durationMinutes: null, updatedAt: 0 })
       };
     }
   }

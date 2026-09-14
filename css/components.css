@@ -101,7 +101,7 @@
   background: #F2F2F7;
 }
 
-/* 喝水小组件 */
+/* 精确饮水量与动态水壶 */
 .water-card {
   background: var(--card-bg);
   border-radius: var(--border-radius);
@@ -118,33 +118,185 @@
   font-size: 0.95rem;
   font-weight: 600;
 }
-.water-cups {
-  display: flex;
-  justify-content: space-between;
+.water-total {
+  color: #2795BD;
+  font-size: 1rem;
+  font-weight: 700;
 }
-.cup-btn {
-  background: #F0F4F8;
-  border: none;
-  border-radius: 10px;
-  width: 38px;
-  height: 44px;
-  cursor: pointer;
+.water-tracker {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+.jug-stage { text-align: center; }
+.water-jug {
+  position: relative;
+  width: 100px;
+  height: 180px;
+  margin: 0 auto 7px;
+}
+.jug-body {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border: 4px solid #A9D6E5;
+  border-radius: 18px 18px 28px 28px;
+  background: linear-gradient(135deg, rgba(255,255,255,.88), rgba(229,247,252,.55));
+  box-shadow: inset 8px 0 14px rgba(255,255,255,.75), 0 7px 16px rgba(72,166,199,.14);
+}
+.jug-handle {
+  position: absolute;
+  z-index: 1;
+  top: 30px;
+  right: -27px;
+  width: 46px;
+  height: 72px;
+  border: 9px solid #A9D6E5;
+  border-left: 0;
+  border-radius: 0 25px 25px 0;
+}
+.water-fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0;
+  background: linear-gradient(180deg, #72D5F4, #35A9D2);
+  transition: height .65s cubic-bezier(.2,.8,.2,1);
+}
+.water-surface {
+  position: absolute;
+  top: -6px;
+  left: -12%;
+  width: 124%;
+  height: 13px;
+  border-radius: 50%;
+  background: #A8E8F8;
+  animation: waterWave 2.8s ease-in-out infinite alternate;
+}
+@keyframes waterWave {
+  from { transform: translateX(-3px) rotate(-1deg); }
+  to { transform: translateX(3px) rotate(1deg); }
+}
+.water-bubble {
+  position: absolute;
+  bottom: 12%;
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid rgba(255,255,255,.75);
+  border-radius: 50%;
+  animation: bubbleRise 3.2s ease-in infinite;
+}
+.bubble-one { left: 22%; animation-delay: -.7s; }
+.bubble-two { left: 54%; width: 8px; height: 8px; animation-delay: -1.8s; }
+.bubble-three { left: 76%; width: 4px; height: 4px; animation-delay: -2.5s; }
+@keyframes bubbleRise {
+  from { transform: translateY(0) scale(.7); opacity: 0; }
+  25% { opacity: .8; }
+  to { transform: translateY(-105px) scale(1.1); opacity: 0; }
+}
+.jug-marker {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(43,105,130,.68);
+  color: #286780;
+  font-size: .56rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: left;
+  pointer-events: none;
+}
+.jug-marker span {
+  display: inline-block;
+  padding: 2px 4px;
+  background: rgba(255,255,255,.8);
+  border-radius: 0 4px 4px 0;
+}
+.halfway-marker { bottom: 37.5%; }
+.target-marker { bottom: 75%; border-top-style: solid; }
+.jug-caption {
+  color: var(--text-muted);
+  font-size: .65rem;
+}
+.water-jug.goal-reached .jug-body {
+  border-color: #69C5DF;
+  box-shadow: 0 0 0 5px rgba(105,197,223,.12), 0 8px 18px rgba(53,169,210,.22);
+}
+.water-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.water-controls label,
+.fitness-duration-block label {
+  font-size: .82rem;
+  font-weight: 600;
+}
+.number-input-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  transition: all 0.2s ease;
-  color: #90A4AE;
+  overflow: hidden;
+  border: 1.5px solid #D9EEF5;
+  border-radius: 12px;
+  background: #F8FCFD;
+  transition: border-color .2s, box-shadow .2s;
 }
-.cup-btn.filled {
-  background: #E1F5FE;
-  color: #03A9F4;
-  transform: scale(1.05);
+.number-input-wrap:focus-within {
+  border-color: #69C5DF;
+  box-shadow: 0 0 0 3px rgba(105,197,223,.12);
 }
-.cup-btn:disabled {
+.number-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 8px 10px 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.number-input-wrap span {
+  padding-right: 12px;
+  color: var(--text-muted);
+  font-size: .8rem;
+  white-space: nowrap;
+}
+.water-save-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px;
+  background: #69C5DF;
+  color: #fff;
+  cursor: pointer;
+  font-size: .84rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(53,169,210,.2);
+}
+.water-save-btn:active:not(:disabled) { transform: scale(.97); }
+.water-save-btn:disabled {
+  background: #D9E5E9;
+  box-shadow: none;
   cursor: default;
-  opacity: 0.85;
-  transform: none;
+}
+.water-message {
+  min-height: 2.6em;
+  color: #56808F;
+  font-size: .72rem;
+  line-height: 1.35;
+}
+@media (max-width: 360px) {
+  .water-tracker { grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+  .water-jug { transform: scale(.9); margin-left: -1px; margin-right: -1px; }
+  .jug-caption { margin-top: -5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .water-fill { transition: none; }
+  .water-surface,
+  .water-bubble { animation: none; }
 }
 
 /* 打卡卡片通用样式 */
@@ -265,37 +417,29 @@
   pointer-events: none;
 }
 
-/* 健身时长 2x2 舒适宫格排版 (彻底防拥挤) */
-.duration-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.duration-grid .satiety-btn {
+/* 精确健身时长 */
+.fitness-duration-block {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 9px 8px;
-  gap: 2px;
-  line-height: 1.25;
-  border-radius: 12px;
+  gap: 7px;
+  padding: 11px;
+  border: 1px solid #E4F0E5;
+  border-radius: 14px;
+  background: #FAFDFA;
 }
-.duration-time {
-  font-size: 0.82rem;
-  font-weight: 600;
-  white-space: nowrap;
+.fitness-number-input {
+  border-color: #DDEBDE;
+  background: #fff;
 }
-.duration-desc {
-  font-size: 0.68rem;
-  white-space: nowrap;
-  opacity: 0.85;
-}
-.duration-grid .satiety-btn.active {
-  background: var(--primary-green-light);
+.fitness-number-input:focus-within {
   border-color: var(--primary-green);
-  color: #2F6934;
-  font-weight: 600;
+  box-shadow: 0 0 0 3px rgba(123,174,127,.12);
+}
+.fitness-quote {
+  min-height: 1.35em;
+  color: #5F8A63;
+  font-size: .76rem;
+  line-height: 1.4;
 }
 
 /* 果冻感打卡按钮 */
