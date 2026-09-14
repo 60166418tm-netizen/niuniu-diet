@@ -99,17 +99,46 @@ function updateWaterVisual(amountMl) {
   document.getElementById('waterMessage').innerText = getWaterMessage(safeAmount);
 }
 
-// 渲染精确喝水组件
+let lastWaterChange = null;
+let waterUndoTimer = null;
+
+function rememberWaterChange(previousMl, buttonText) {
+  clearTimeout(waterUndoTimer);
+  lastWaterChange = { previousMl, buttonText };
+  const undoBtn = document.getElementById('waterUndoBtn');
+  undoBtn.innerText = buttonText;
+  undoBtn.classList.add('visible');
+  waterUndoTimer = setTimeout(() => {
+    lastWaterChange = null;
+    undoBtn.classList.remove('visible');
+  }, WATER_UNDO_TIMEOUT_MS);
+}
+
+function setWaterTotal(amountMl) {
+  currentViewData.waterMl = amountMl;
+  currentViewData.water = amountMl / 250;
+  currentViewData.waterUpdatedAt = Date.now();
+  persistCurrentData();
+  renderWater();
+  pushToCloud();
+}
+
+// 渲染已保存的累计水量；输入框只填写“本次饮水量”
 function renderWater() {
   const amountMl = getWaterAmountMl(currentViewData);
   const isToday = (currentViewDate === todayKey);
   const input = document.getElementById('waterInput');
   const saveBtn = document.getElementById('waterSaveBtn');
+  const correctBtn = document.getElementById('waterCorrectBtn');
+  const undoBtn = document.getElementById('waterUndoBtn');
 
-  input.value = amountMl || '';
+  input.value = '';
   input.disabled = !isToday;
   saveBtn.disabled = !isToday;
-  saveBtn.innerText = isToday ? '保存今日水量' : '历史记录';
+  saveBtn.innerText = isToday ? '＋ 计入今日饮水' : '历史记录';
+  correctBtn.hidden = !isToday;
+  undoBtn.classList.toggle('visible', isToday && lastWaterChange !== null);
+  if (isToday && lastWaterChange) undoBtn.innerText = lastWaterChange.buttonText;
   updateWaterVisual(amountMl);
   if (!isToday) {
     document.getElementById('waterMessage').innerText = amountMl > 0
@@ -118,30 +147,75 @@ function renderWater() {
   }
 }
 
-function saveWaterAmount() {
+function addWaterAmount() {
   if (currentViewDate !== todayKey) return;
   const input = document.getElementById('waterInput');
   const rawValue = input.value.trim();
-  const amountMl = Number(rawValue);
-  if (rawValue === '' || !Number.isFinite(amountMl) || amountMl < 0 || amountMl > WATER_INPUT_MAX_ML) {
-    showModal(`请输入 0～${WATER_INPUT_MAX_ML} 之间的饮水量哦～`, '💧');
+  const addedMl = Number(rawValue);
+  if (rawValue === '' || !Number.isInteger(addedMl) || addedMl < 1 || addedMl > WATER_SINGLE_INPUT_MAX_ML) {
+    showModal(`请输入 1～${WATER_SINGLE_INPUT_MAX_ML} 之间的本次饮水量哦～`, '💧');
     input.focus();
     return;
   }
 
-  const roundedMl = Math.round(amountMl);
   const previousMl = getWaterAmountMl(currentViewData);
-  currentViewData.waterMl = roundedMl;
-  currentViewData.water = roundedMl / 250;
-  currentViewData.waterUpdatedAt = Date.now();
-  persistCurrentData();
-  renderWater();
-  pushToCloud();
+  const newTotalMl = previousMl + addedMl;
+  if (newTotalMl > WATER_INPUT_MAX_ML) {
+    showModal(`今日累计饮水量不能超过 ${WATER_INPUT_MAX_ML}ml，请检查输入哦～`, '💧');
+    return;
+  }
 
-  if (previousMl < WATER_TARGET_ML && roundedMl >= WATER_TARGET_ML) {
+  rememberWaterChange(previousMl, `撤销刚才的 +${addedMl}ml`);
+  setWaterTotal(newTotalMl);
+  document.getElementById('waterMessage').innerText = `已加入 ${addedMl}ml，今日累计 ${newTotalMl}ml。`;
+
+  if (previousMl < WATER_TARGET_ML && newTotalMl >= WATER_TARGET_ML) {
     triggerConfetti();
     showModal('今日 1500ml 饮水目标达成！水润润的牛牛也太棒啦～', '💦');
   }
+}
+
+function undoLastWaterChange() {
+  if (currentViewDate !== todayKey || !lastWaterChange) return;
+  const previousMl = lastWaterChange.previousMl;
+  clearTimeout(waterUndoTimer);
+  lastWaterChange = null;
+  document.getElementById('waterUndoBtn').classList.remove('visible');
+  setWaterTotal(previousMl);
+  document.getElementById('waterMessage').innerText = `已撤销，今日累计恢复为 ${previousMl}ml。`;
+}
+
+function openWaterCorrection() {
+  if (currentViewDate !== todayKey) return;
+  const input = document.getElementById('waterCorrectionInput');
+  input.value = getWaterAmountMl(currentViewData);
+  document.getElementById('waterCorrectionModal').classList.add('active');
+  setTimeout(() => { input.focus(); input.select(); }, 50);
+}
+
+function closeWaterCorrection() {
+  document.getElementById('waterCorrectionModal').classList.remove('active');
+}
+
+function confirmWaterCorrection() {
+  if (currentViewDate !== todayKey) return;
+  const input = document.getElementById('waterCorrectionInput');
+  const rawValue = input.value.trim();
+  const correctedMl = Number(rawValue);
+  if (rawValue === '' || !Number.isInteger(correctedMl) || correctedMl < 0 || correctedMl > WATER_INPUT_MAX_ML) {
+    input.setCustomValidity(`请输入 0～${WATER_INPUT_MAX_ML} 之间的整数水量`);
+    input.reportValidity();
+    setTimeout(() => input.setCustomValidity(''), 1000);
+    input.focus();
+    return;
+  }
+
+  const previousMl = getWaterAmountMl(currentViewData);
+  closeWaterCorrection();
+  if (correctedMl === previousMl) return;
+  rememberWaterChange(previousMl, '撤销刚才的修正');
+  setWaterTotal(correctedMl);
+  document.getElementById('waterMessage').innerText = `已修正，今日累计 ${correctedMl}ml。`;
 }
 
 function getLegacyDurationBucket(minutes) {
@@ -162,6 +236,14 @@ function getFitnessDurationLabel(data) {
   return data && data.duration ? data.duration : '';
 }
 
+function updateFitnessDurationInputLayout(input) {
+  const hasValue = input.value !== '';
+  const wrap = input.closest('.fitness-number-input');
+  wrap.classList.toggle('has-value', hasValue);
+  // 输入后按实际位数收缩，使“数字＋分钟”作为一个整体居中
+  input.style.width = Math.max(2, input.value.length) + 'ch';
+}
+
 function getFitnessDurationQuote(minutes) {
   if (!Number.isFinite(minutes) || minutes <= 0) {
     return '填入准确时长，看看今天会收到哪句夸夸～';
@@ -169,16 +251,6 @@ function getFitnessDurationQuote(minutes) {
   const level = minutes < 30 ? 'light' : (minutes < 60 ? 'steady' : (minutes < 90 ? 'strong' : 'champion'));
   const quotes = fitnessDurationQuotes[level];
   return quotes[Math.floor(minutes / 5) % quotes.length];
-}
-
-function updateFitnessDurationPreview(minutes, legacyDuration) {
-  const quote = document.getElementById('fitnessDurationQuote');
-  if (!quote) return;
-  if ((!Number.isFinite(minutes) || minutes <= 0) && legacyDuration) {
-    quote.innerText = `此前记录：${legacyDuration}。重新修改时可填写准确分钟。`;
-    return;
-  }
-  quote.innerText = getFitnessDurationQuote(minutes);
 }
 
 // 渲染打卡卡片 (午餐、晚餐、健身)
@@ -207,10 +279,15 @@ function renderCard(type) {
 
   if (type === 'fitness') {
     const durationInput = document.getElementById('fitnessDurationInput');
+    const durationWrap = durationInput.closest('.fitness-number-input');
+    const legacyValue = document.getElementById('fitnessLegacyDuration');
     const durationMinutes = getFitnessDurationMinutes(data);
+    const showLegacyDuration = data.done && durationMinutes === null && Boolean(data.duration);
     durationInput.value = durationMinutes === null ? '' : durationMinutes;
+    updateFitnessDurationInputLayout(durationInput);
     durationInput.disabled = !isToday || data.done;
-    updateFitnessDurationPreview(durationMinutes, data.duration);
+    durationWrap.classList.toggle('legacy-mode', showLegacyDuration);
+    legacyValue.innerText = showLegacyDuration ? `原记录：${data.duration}` : '';
   }
 
   const typeName = type === 'lunch' ? '午餐' : (type === 'dinner' ? '晚餐' : '健身');
@@ -368,32 +445,37 @@ function initPage() {
     });
   });
 
-  // 喝水输入时先实时预览水位，点击保存或按回车后才写入数据
+  // 本次饮水量只有在点击按钮或按回车后才累加到今日总量
   const waterInput = document.getElementById('waterInput');
-  waterInput.addEventListener('input', () => {
-    if (currentViewDate !== todayKey) return;
-    const previewMl = Number(waterInput.value);
-    updateWaterVisual(Number.isFinite(previewMl) && previewMl >= 0 ? previewMl : 0);
-  });
   waterInput.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      saveWaterAmount();
+      addWaterAmount();
+    }
+  });
+
+  document.getElementById('waterCorrectionInput').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      confirmWaterCorrection();
     }
   });
 
   // 精确健身分钟数实时保存，并同步刷新小标语
   const durationInput = document.getElementById('fitnessDurationInput');
+  durationInput.closest('.fitness-number-input').addEventListener('click', () => {
+    if (!durationInput.disabled) durationInput.focus();
+  });
   durationInput.addEventListener('input', () => {
     if (currentViewDate !== todayKey) return;
     if (currentViewData.fitness && currentViewData.fitness.done) return;
     if (!currentViewData.fitness) currentViewData.fitness = {};
     const minutes = Number(durationInput.value);
+    updateFitnessDurationInputLayout(durationInput);
     const validMinutes = Number.isInteger(minutes) && minutes > 0 && minutes <= 600 ? minutes : null;
     currentViewData.fitness.durationMinutes = validMinutes;
     if (validMinutes !== null) currentViewData.fitness.duration = getLegacyDurationBucket(validMinutes);
     currentViewData.fitness.updatedAt = Date.now();
-    updateFitnessDurationPreview(validMinutes, validMinutes === null ? null : currentViewData.fitness.duration);
     persistCurrentData();
     triggerDebouncedCloudSync();
   });

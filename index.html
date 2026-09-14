@@ -61,7 +61,10 @@
     <div class="water-card">
       <div class="card-title-row">
         <span class="card-title">💧 喝水</span>
-        <span class="water-total" id="waterCount">0 ml</span>
+        <div class="water-summary">
+          <span class="water-total" id="waterCount">0 ml</span>
+          <button class="water-correct-btn" id="waterCorrectBtn" type="button" onclick="openWaterCorrection()">修正</button>
+        </div>
       </div>
       <div class="water-tracker">
         <div class="jug-stage">
@@ -81,13 +84,14 @@
           <div class="jug-caption">成年女性日常饮水参考</div>
         </div>
         <div class="water-controls">
-          <label for="waterInput">今日累计喝了多少水？</label>
+          <label for="waterInput">这次喝了多少水？</label>
           <div class="number-input-wrap">
-            <input type="number" id="waterInput" min="0" max="10000" step="1" inputmode="numeric" placeholder="例如 1250">
+            <input type="number" id="waterInput" min="1" max="3000" step="1" inputmode="numeric" placeholder="例如 300">
             <span>ml</span>
           </div>
-          <button class="water-save-btn" id="waterSaveBtn" type="button" onclick="saveWaterAmount()">保存今日水量</button>
+          <button class="water-save-btn" id="waterSaveBtn" type="button" onclick="addWaterAmount()">＋ 计入今日饮水</button>
           <p class="water-message" id="waterMessage">水壶还空空的，等牛牛来装满它～</p>
+          <button class="water-undo-btn" id="waterUndoBtn" type="button" onclick="undoLastWaterChange()">撤销刚才记录</button>
         </div>
       </div>
     </div>
@@ -141,10 +145,11 @@
       <div class="fitness-duration-block">
         <label for="fitnessDurationInput">今天运动了多久？</label>
         <div class="number-input-wrap fitness-number-input">
-          <input type="number" id="fitnessDurationInput" min="1" max="600" step="1" inputmode="numeric" placeholder="例如 45">
-          <span>分钟</span>
+          <input type="number" id="fitnessDurationInput" min="1" max="600" step="1" inputmode="numeric" aria-label="运动时长（分钟）">
+          <span class="fitness-duration-unit">分钟</span>
+          <span class="fitness-duration-example">示例 45 分钟</span>
+          <span class="fitness-legacy-value" id="fitnessLegacyDuration"></span>
         </div>
-        <p class="fitness-quote" id="fitnessDurationQuote">填入准确时长，看看今天会收到哪句夸夸～</p>
       </div>
       <button class="punch-btn" onclick="punchCard('fitness')">完成健身打卡</button>
     </div>
@@ -196,6 +201,22 @@
       <div class="modal-icon" id="modalIcon">🎉</div>
       <div class="modal-msg" id="modalQuote">打卡成功！</div>
       <button class="modal-close-btn" onclick="closeModal()">知道啦 (收下鼓励)</button>
+    </div>
+  </div>
+
+  <!-- 今日饮水总量修正弹窗 -->
+  <div class="modal-overlay" id="waterCorrectionModal">
+    <div class="modal-content water-correction-content">
+      <div class="modal-icon">💧</div>
+      <div class="water-correction-title">修正今日累计饮水量</div>
+      <div class="number-input-wrap water-correction-input">
+        <input type="number" id="waterCorrectionInput" min="0" max="10000" step="1" inputmode="numeric">
+        <span>ml</span>
+      </div>
+      <div class="water-correction-actions">
+        <button type="button" class="correction-cancel-btn" onclick="closeWaterCorrection()">取消</button>
+        <button type="button" class="correction-confirm-btn" onclick="confirmWaterCorrection()">确认修正</button>
+      </div>
     </div>
   </div>
 

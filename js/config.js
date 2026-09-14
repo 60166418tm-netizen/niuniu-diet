@@ -17,6 +17,8 @@ const WATER_HALF_ML = 750;
 const WATER_TARGET_ML = 1500;
 const WATER_JUG_CAPACITY_ML = 2000;
 const WATER_INPUT_MAX_ML = 10000;
+const WATER_SINGLE_INPUT_MAX_ML = 3000;
+const WATER_UNDO_TIMEOUT_MS = 2 * 60 * 1000;
 
 // 精确健身时长对应的小标语（可爱、鼓励、情侣风混搭）
 const fitnessDurationQuotes = {
