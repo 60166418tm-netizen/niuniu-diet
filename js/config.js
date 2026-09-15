@@ -75,5 +75,5 @@ const CARD_TYPES = ['lunch', 'dinner', 'fitness'];
 const DEFAULT_PLACEHOLDERS = {
   lunch: '例如：香煎鸡胸肉 + 西蓝花 + 紫薯',
   dinner: '例如：大虾蔬菜沙拉 + 无糖豆浆',
-  fitness: '例如：帕梅拉全身燃脂 / 慢跑 3km / 普拉提拉伸'
+  fitness: '例如：跑步机 / 动感单车 / 力量训练'
 };

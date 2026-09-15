@@ -18,11 +18,6 @@
   <div class="container">
     <!-- 顶部状态栏 -->
     <div class="header-card">
-      <button class="calendar-trigger-btn" onclick="openCalendar()">
-        <span>📅</span>
-        <span>打卡历</span>
-      </button>
-
       <div class="avatar-wrapper" id="cowAvatar" title="戳一戳牛牛">
         <svg viewBox="0 0 100 100" width="100%" height="100%">
           <circle cx="24" cy="38" r="14" fill="#FDECE9" stroke="#4A4A4A" stroke-width="3"/>
@@ -80,7 +75,7 @@
         <span class="card-title">💧 喝水</span>
         <div class="water-summary">
           <span class="water-total" id="waterCount">0 ml</span>
-          <button class="water-correct-btn" id="waterCorrectBtn" type="button" onclick="openWaterCorrection()">修正</button>
+          <button class="water-correct-btn" id="waterCorrectBtn" type="button" onclick="openWaterCorrection()">修改</button>
         </div>
       </div>
       <div class="water-tracker">
@@ -158,7 +153,7 @@
           <button class="undo-btn" id="undo-fitness" onclick="undoCard('fitness')">修改</button>
         </div>
       </div>
-      <input type="text" class="meal-input" id="input-fitness" placeholder="例如：帕梅拉全身燃脂 / 慢跑 3km / 普拉提拉伸">
+      <input type="text" class="meal-input" id="input-fitness" placeholder="例如：跑步机 / 动感单车 / 力量训练">
       <div class="fitness-duration-block">
         <label for="fitnessDurationInput">今天运动了多久？</label>
         <div class="number-input-wrap fitness-number-input">

@@ -1,25 +1,3 @@
-/* 日历入口按钮 */
-.calendar-trigger-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: var(--primary-green-light);
-  border: none;
-  border-radius: 12px;
-  padding: 8px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: var(--primary-green);
-  font-weight: 600;
-  transition: transform 0.15s ease;
-}
-.calendar-trigger-btn:active {
-  transform: scale(0.92);
-}
-
 /* 全页日历抽屉视图 */
 .calendar-page-overlay {
   position: fixed;
