@@ -51,7 +51,7 @@ const secretWhispers = [
   "🐮 恭喜解锁隐藏成就：全世界最会认真生活的小牛！",
   "🐮 叮咚！检测到一只自律的小可爱，奖励一个大大的隔空抱抱～",
   "🐮 某人悄悄托小牛带句话：别给自己太大压力，健康开心的你最闪闪发光。",
-  "🐮 叮！你拍了拍小牛，小牛并向你发射了 100 颗小心心 ❤️",
+  "🐮 叮！你拍了拍小牛，小牛向你发射了 100 颗小心心 ❤️",
   "🐮 专属小纸条：肚子吃饱饱，烦恼全跑掉！今天也要元气满满哦~",
   "🐮 小牛悄悄说：坚持的每一步，都有人在背后默默为你加油喝彩！",
   "🐮 叮！来自男朋友的特别提醒：多喝水，按时吃饭，运动后好好拉伸，想你啦！",
@@ -65,8 +65,8 @@ const UPSTASH_URL = "https://vocal-longhorn-102685.upstash.io";
 const UPSTASH_TOKEN = "gQAAAAAAAZEdAAIgcDEyYzhiMTAxMGQ2Njg0ZmJhYmY3OWYxYWE1MTc1ODZmOQ";
 const STORAGE_KEY = "niuniu_diet_data";
 
-// 🧪 测试模式开关：true 为测试模式（不写本地，不上报云端），false 为正式模式
-const IS_TEST_MODE = false;
+// 测试模式由本地 test_mode.js 控制；线上缺少该文件时自动使用正式模式
+const IS_TEST_MODE = window.NIUNIU_TEST_MODE === true;
 
 // 打卡卡片类型
 const CARD_TYPES = ['lunch', 'dinner', 'fitness'];

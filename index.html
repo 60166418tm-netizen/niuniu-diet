@@ -232,6 +232,14 @@
     </div>
   </div>
 
+  <!-- 本地测试开关：线上环境始终保持正式模式 -->
+  <script>
+    window.NIUNIU_TEST_MODE = false;
+    if (location.protocol === 'file:' || ['localhost', '127.0.0.1', '::1'].includes(location.hostname)) {
+      document.write('<script src="test_mode.js"><\/script>');
+    }
+  </script>
+
   <!-- 模块化 JavaScript 脚本引入 (按依赖顺序加载) -->
   <script src="js/config.js"></script>
   <script src="js/confetti.js"></script>
