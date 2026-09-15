@@ -3,6 +3,7 @@
 let currentViewDate = getTodayKey();
 let currentViewData = {};
 const todayKey = getTodayKey();
+const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 function getEmptyDayData() {
   return {
@@ -15,6 +16,37 @@ function getEmptyDayData() {
   };
 }
 
+function dateKeyToLocalDate(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function navigateDate(offset) {
+  const targetDate = dateKeyToLocalDate(currentViewDate);
+  targetDate.setDate(targetDate.getDate() + offset);
+  const targetKey = formatDate(targetDate.getFullYear(), targetDate.getMonth() + 1, targetDate.getDate());
+  if (targetKey > todayKey) return;
+  switchDate(targetKey);
+}
+
+function renderDateNavigator() {
+  const viewDate = dateKeyToLocalDate(currentViewDate);
+  const isToday = currentViewDate === todayKey;
+  const sameYear = viewDate.getFullYear() === dateKeyToLocalDate(todayKey).getFullYear();
+  const dateText = `${viewDate.getMonth() + 1}月${viewDate.getDate()}日`;
+  const title = isToday
+    ? `今天 · ${dateText}`
+    : `${sameYear ? '' : viewDate.getFullYear() + '年'}${dateText} ${WEEKDAY_LABELS[viewDate.getDay()]}`;
+
+  document.getElementById('dateNavTitle').innerText = title;
+  document.getElementById('dateNavHint').hidden = !isToday;
+  document.getElementById('dateReturnToday').hidden = isToday;
+  const nextBtn = document.getElementById('nextDateBtn');
+  nextBtn.disabled = isToday;
+  nextBtn.setAttribute('aria-disabled', String(isToday));
+  document.querySelector('.date-navigator').classList.toggle('history-view', !isToday);
+}
+
 // 切换查看的日期
 function switchDate(targetDateKey) {
   currentViewDate = targetDateKey;
@@ -23,17 +55,7 @@ function switchDate(targetDateKey) {
 
   const isToday = (currentViewDate === todayKey);
   const isPast = (currentViewDate < todayKey);
-
-  // 顶部提示条控制
-  const banner = document.getElementById('historyBanner');
-  const bannerText = document.getElementById('historyBannerText');
-  if (!isToday) {
-    banner.classList.add('active');
-    const parts = currentViewDate.split('-');
-    bannerText.innerText = '📅 正在查看 ' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日 的打卡历史 (只读)';
-  } else {
-    banner.classList.remove('active');
-  }
+  renderDateNavigator();
 
   // 动态问候语
   const hour = new Date().getHours();

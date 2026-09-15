@@ -1,29 +1,107 @@
-/* 历史记录浏览提示条 */
-.history-banner {
-  display: none;
+/* 相邻日期快速切换 */
+.date-navigator {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
   align-items: center;
-  justify-content: space-between;
-  background: var(--soft-peach-light);
-  border: 1px solid var(--soft-peach);
-  color: #D9534F;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  animation: fadeIn 0.3s ease;
+  gap: 10px;
+  min-height: 66px;
+  padding: 8px 10px;
+  border: 1px solid #E5F0E6;
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.035);
 }
-.history-banner.active {
-  display: flex;
-}
-.return-today-btn {
-  background: #FFFFFF;
-  color: #D9534F;
-  border: 1px solid #D9534F;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
+.date-nav-arrow {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary-green-light);
+  color: var(--primary-green);
   cursor: pointer;
-  font-weight: 600;
+  font-size: 1.7rem;
+  font-weight: 500;
+  line-height: 1;
+  transition: transform .15s ease, opacity .2s ease, background .2s ease;
+}
+.date-nav-arrow svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.date-nav-arrow:active:not(:disabled) {
+  transform: scale(.9);
+  background: #DDEEDF;
+}
+.date-nav-arrow:disabled {
+  opacity: .28;
+  cursor: default;
+}
+.date-nav-center {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+}
+.date-nav-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 0;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+}
+#dateNavTitle {
+  font-size: .94rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.date-nav-hint {
+  color: var(--text-muted);
+  font-size: .65rem;
+  line-height: 1.25;
+}
+.date-return-today {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: .67rem;
+  line-height: 1.25;
+}
+.date-nav-dot { padding: 0 3px; }
+.date-return-text {
+  color: var(--primary-green);
+  font-weight: 700;
+  border-bottom: 1px dashed rgba(123, 174, 127, .65);
+}
+.date-navigator.history-view {
+  border-color: #DCEBDD;
+  background: #FEFFFE;
+}
+@media (max-width: 350px) {
+  .date-navigator {
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 6px;
+  }
+  .date-nav-arrow {
+    width: 38px;
+    height: 38px;
+  }
 }
 
 /* 顶部问候与小牛头像卡片 */
